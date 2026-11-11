@@ -1,0 +1,143 @@
+flight_id,flight_date,delay_code,delay_reason,delay_minutes
+6E1003,2025-04-03,ROT,Aircraft rotation and turnaround,18
+6E1004,2025-04-03,ROT,Aircraft rotation and turnaround,18
+UK1005,2025-04-06,OPS,Airport or ground operations,20
+SG1011,2025-04-18,OPS,Airport or ground operations,22
+AI1013,2025-04-20,ATC,Air traffic control restrictions,45
+AI1014,2025-04-20,OTH,Other or unspecified operational reason,22
+UK1017,2025-04-25,ROT,Aircraft rotation and turnaround,23
+6E1018,2025-04-25,OPS,Airport or ground operations,17
+6E1020,2025-04-30,OPS,Airport or ground operations,25
+SG1022,2025-04-01,WX,Weather conditions,28
+UK1030,2025-04-11,OPS,Airport or ground operations,33
+UK1032,2025-04-17,OPS,Airport or ground operations,22
+SG1034,2025-04-18,ROT,Aircraft rotation and turnaround,20
+6E1036,2025-04-19,ROT,Aircraft rotation and turnaround,15
+SG1037,2025-04-28,OTH,Other or unspecified operational reason,17
+SG1039,2025-04-30,ATC,Air traffic control restrictions,23
+SG1040,2025-04-30,ATC,Air traffic control restrictions,18
+SG1041,2025-04-05,ATC,Air traffic control restrictions,31
+AI1042,2025-04-05,OPS,Airport or ground operations,41
+SG1043,2025-04-06,OPS,Airport or ground operations,32
+SG1044,2025-04-06,ROT,Aircraft rotation and turnaround,17
+SG1047,2025-04-12,ATC,Air traffic control restrictions,20
+UK1052,2025-04-15,ROT,Aircraft rotation and turnaround,34
+UK1055,2025-04-18,ROT,Aircraft rotation and turnaround,19
+AI1060,2025-04-29,ROT,Aircraft rotation and turnaround,17
+AI1069,2025-04-15,WX,Weather conditions,48
+UK1070,2025-04-15,OPS,Airport or ground operations,22
+UK1073,2025-04-24,OPS,Airport or ground operations,18
+6E1074,2025-04-24,WX,Weather conditions,19
+UK1076,2025-04-27,WX,Weather conditions,21
+UK1077,2025-04-29,OPS,Airport or ground operations,26
+6E1078,2025-04-29,ROT,Aircraft rotation and turnaround,19
+SG1083,2025-04-04,ROT,Aircraft rotation and turnaround,26
+6E1084,2025-04-04,WX,Weather conditions,20
+AI1085,2025-04-07,ROT,Aircraft rotation and turnaround,21
+AI1086,2025-04-07,OTH,Other or unspecified operational reason,26
+UK1089,2025-04-09,OPS,Airport or ground operations,18
+SG1090,2025-04-09,ROT,Aircraft rotation and turnaround,26
+UK1094,2025-04-14,ROT,Aircraft rotation and turnaround,16
+UK1097,2025-04-21,ROT,Aircraft rotation and turnaround,18
+SG1098,2025-04-21,WX,Weather conditions,15
+UK1100,2025-04-26,ATC,Air traffic control restrictions,36
+6E1101,2025-04-02,ROT,Aircraft rotation and turnaround,16
+SG1103,2025-04-05,WX,Weather conditions,23
+AI1104,2025-04-05,OTH,Other or unspecified operational reason,20
+6E1108,2025-04-10,WX,Weather conditions,34
+UK1111,2025-04-20,OTH,Other or unspecified operational reason,19
+6E1112,2025-04-20,ATC,Air traffic control restrictions,18
+6E1114,2025-04-23,ROT,Aircraft rotation and turnaround,22
+SG1115,2025-04-25,WX,Weather conditions,28
+UK1116,2025-04-25,ATC,Air traffic control restrictions,17
+AI1117,2025-04-27,WX,Weather conditions,38
+SG1121,2025-04-02,OPS,Airport or ground operations,18
+6E1125,2025-04-04,ATC,Air traffic control restrictions,17
+6E1129,2025-04-13,OPS,Airport or ground operations,17
+AI1134,2025-04-16,WX,Weather conditions,19
+6E1135,2025-04-19,ATC,Air traffic control restrictions,17
+SG1141,2025-04-06,WX,Weather conditions,23
+UK1148,2025-04-15,ATC,Air traffic control restrictions,19
+SG1149,2025-04-16,ROT,Aircraft rotation and turnaround,16
+SG1153,2025-04-19,OPS,Airport or ground operations,21
+6E1154,2025-04-19,WX,Weather conditions,17
+AI1159,2025-04-29,WX,Weather conditions,16
+6E1160,2025-04-29,WX,Weather conditions,24
+AI1176,2025-04-22,WX,Weather conditions,19
+UK1184,2025-04-05,OTH,Other or unspecified operational reason,18
+6E1188,2025-04-09,WX,Weather conditions,18
+AI1190,2025-04-10,ATC,Air traffic control restrictions,17
+6E1195,2025-04-18,ATC,Air traffic control restrictions,16
+6E1196,2025-04-18,ROT,Aircraft rotation and turnaround,18
+AI1199,2025-04-28,WX,Weather conditions,16
+SG1203,2025-04-08,ATC,Air traffic control restrictions,17
+6E1208,2025-04-14,WX,Weather conditions,19
+SG1211,2025-04-22,WX,Weather conditions,17
+6E1212,2025-04-22,OPS,Airport or ground operations,33
+UK1213,2025-04-24,OPS,Airport or ground operations,24
+SG1214,2025-04-24,WX,Weather conditions,28
+6E1218,2025-04-28,WX,Weather conditions,37
+6E1221,2025-04-05,ATC,Air traffic control restrictions,20
+UK1225,2025-04-11,WX,Weather conditions,23
+AI1226,2025-04-11,WX,Weather conditions,18
+AI1231,2025-04-20,ATC,Air traffic control restrictions,24
+AI1232,2025-04-20,WX,Weather conditions,34
+6E1234,2025-04-27,OPS,Airport or ground operations,15
+AI1237,2025-04-29,WX,Weather conditions,16
+UK1239,2025-04-30,ATC,Air traffic control restrictions,21
+UK1241,2025-04-02,ROT,Aircraft rotation and turnaround,22
+SG1244,2025-04-04,OPS,Airport or ground operations,20
+SG1248,2025-04-11,OTH,Other or unspecified operational reason,15
+AI1256,2025-04-20,OPS,Airport or ground operations,35
+UK1261,2025-04-01,OTH,Other or unspecified operational reason,17
+SG1265,2025-04-04,WX,Weather conditions,25
+UK1266,2025-04-04,WX,Weather conditions,27
+6E1268,2025-04-05,ROT,Aircraft rotation and turnaround,15
+SG1271,2025-04-10,WX,Weather conditions,18
+UK1272,2025-04-10,ROT,Aircraft rotation and turnaround,20
+UK1273,2025-04-12,OPS,Airport or ground operations,17
+UK1274,2025-04-12,ROT,Aircraft rotation and turnaround,26
+6E1275,2025-04-16,OTH,Other or unspecified operational reason,18
+6E1276,2025-04-16,ROT,Aircraft rotation and turnaround,40
+AI1287,2025-04-06,ATC,Air traffic control restrictions,18
+UK1288,2025-04-06,WX,Weather conditions,23
+UK1289,2025-04-07,OTH,Other or unspecified operational reason,15
+AI1293,2025-04-09,ATC,Air traffic control restrictions,18
+AI1294,2025-04-09,OPS,Airport or ground operations,25
+AI1298,2025-04-17,ATC,Air traffic control restrictions,20
+UK1299,2025-04-19,OTH,Other or unspecified operational reason,32
+6E1300,2025-04-19,OPS,Airport or ground operations,32
+6E1317,2025-04-29,OPS,Airport or ground operations,19
+6E1323,2025-04-11,ATC,Air traffic control restrictions,19
+UK1326,2025-04-18,ATC,Air traffic control restrictions,16
+SG1333,2025-04-25,WX,Weather conditions,39
+AI1334,2025-04-25,ATC,Air traffic control restrictions,35
+SG1337,2025-04-29,ROT,Aircraft rotation and turnaround,15
+UK1340,2025-04-30,ROT,Aircraft rotation and turnaround,16
+AI1341,2025-04-05,ROT,Aircraft rotation and turnaround,26
+SG1344,2025-04-06,WX,Weather conditions,37
+UK1348,2025-04-15,ATC,Air traffic control restrictions,26
+SG1350,2025-04-17,WX,Weather conditions,41
+6E1352,2025-04-18,ATC,Air traffic control restrictions,29
+6E1360,2025-04-27,WX,Weather conditions,32
+AI1361,2025-04-02,WX,Weather conditions,22
+UK1366,2025-04-06,ATC,Air traffic control restrictions,32
+6E1368,2025-04-08,ATC,Air traffic control restrictions,23
+UK1369,2025-04-09,OTH,Other or unspecified operational reason,26
+UK1372,2025-04-18,ATC,Air traffic control restrictions,25
+6E1375,2025-04-22,OTH,Other or unspecified operational reason,20
+UK1376,2025-04-22,OPS,Airport or ground operations,15
+AI1380,2025-04-26,OPS,Airport or ground operations,19
+6E1383,2025-04-02,WX,Weather conditions,33
+AI1384,2025-04-02,ROT,Aircraft rotation and turnaround,30
+UK1385,2025-04-11,WX,Weather conditions,18
+6E1386,2025-04-11,WX,Weather conditions,18
+AI1387,2025-04-13,ROT,Aircraft rotation and turnaround,15
+AI1388,2025-04-13,ROT,Aircraft rotation and turnaround,50
+UK1391,2025-04-16,ROT,Aircraft rotation and turnaround,24
+6E1395,2025-04-24,OPS,Airport or ground operations,20
+SG1396,2025-04-24,OPS,Airport or ground operations,23
+AI1397,2025-04-27,ROT,Aircraft rotation and turnaround,26
+UK1405,2025-04-15,OPS,Airport or ground operations,30
+6E1416,2025-04-23,OPS,Airport or ground operations,18
+6E1418,2025-04-25,OPS,Airport or ground operations,24
