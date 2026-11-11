@@ -108,10 +108,12 @@ def _prepare_flights(schedule: pd.DataFrame, actuals: pd.DataFrame, issue_rows: 
     s["flight_id"] = _normalize_id(s.flight_id)
     s["flight_date"] = _parse_date(s.flight_date)
     s["scheduled_departure"] = _parse_time(s.scheduled_departure, s.flight_date)
+    s["flight_date"] = s.flight_date.fillna(s.scheduled_departure.dt.normalize())
     s["scheduled_arrival"] = _parse_time(s.scheduled_arrival, s.flight_date)
     a["flight_id"] = _normalize_id(a.flight_id)
     a["flight_date"] = _parse_date(a.flight_date)
     a["actual_departure"] = _parse_time(a.actual_departure, a.flight_date)
+    a["flight_date"] = a.flight_date.fillna(a.actual_departure.dt.normalize())
     a["actual_arrival"] = _parse_time(a.actual_arrival, a.flight_date)
 
     for frame, source, id_col, time_col in [(s, "schedule", "scheduled_departure", "scheduled_arrival"), (a, "actuals", "actual_departure", "actual_arrival")]:

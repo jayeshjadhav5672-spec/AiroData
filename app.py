@@ -78,8 +78,12 @@ if all_flights.empty:
     st.error("No processed flights are available. Load the synthetic sample data or process flight schedule and actuals CSV files.")
     st.stop()
 
-min_date = all_flights.flight_date.dropna().min().date()
-max_date = all_flights.flight_date.dropna().max().date()
+valid_flight_dates = all_flights.flight_date.dropna()
+if valid_flight_dates.empty:
+    st.error("Processed flight records have no valid service dates. Review the date issues in Dataset Management.")
+    st.stop()
+min_date = valid_flight_dates.min().date()
+max_date = valid_flight_dates.max().date()
 
 with st.sidebar:
     st.markdown("## ◫ AeroData")
@@ -116,7 +120,10 @@ else:
 
 if flights.empty:
     st.info("No flights in this date range. Choose a wider range or check the dataset.")
-    st.stop()
+    if page == "Dataset Management":
+        flights = all_flights.copy()
+    else:
+        st.stop()
 
 visible_keys = set(flights.flight_key.dropna().astype(str)) if "flight_key" in flights else set()
 rotations = all_rotations.copy()
@@ -185,7 +192,7 @@ if page == "Overview":
         ("DELAYED FLIGHTS", f"{int(delayed_mask.sum()):,}", f"Departure or arrival ≥ {DELAY_THRESHOLD_MIN} min"),
         ("DEPARTURE OTP", fmt_pct(otp), f"{int(eligible_mask.sum()):,} eligible flights · ≤15 min"),
         ("PROPAGATION RATE", fmt_pct(prop_rate), f"{int(rotation_eligible.sum()):,} eligible connections"),
-        ("AVG DEPARTURE DELAY", delay_label(dep.mean()), f"{int(dep.notna().sum()):,} flights with data"),
+        ("AVG DEPARTURE DELAY", delay_label(dep.mean()), f"Mean · {int(dep.notna().sum()):,} flights with data"),
     ])
     left, right = st.columns([1.5, 1])
     with left:
@@ -535,6 +542,8 @@ else:
     if not all_codes.empty and "delay_code" in all_codes and all_codes.flight_id.notna().any():
         st.subheader("Delay-code summary")
         st.dataframe(all_codes.groupby(["delay_code", "description"], dropna=False).agg(records=("flight_id", "count"), delay_minutes=("delay_minutes", "sum")).reset_index(), hide_index=True, use_container_width=True)
+    else:
+        st.info("No flight-level delay-code records are available for this dataset.")
     st.subheader("Limitations")
     st.markdown("- Synthetic data is for demonstration and not operational decisions.\n- Missing values are not treated as zero.\n- Aircraft links depend on normalized aircraft IDs, route continuity, and plausible timing.\n- Delay propagation and weather findings are associations, not proof of causation.\n- This summary reflects only the selected date range.")
     active_range = f"{date_range[0]} to {date_range[1]}" if isinstance(date_range, tuple) and len(date_range) == 2 else str(date_range)
