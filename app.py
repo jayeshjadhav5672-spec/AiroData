@@ -268,6 +268,127 @@ elif page == "Flight Operations":
     csv_button("Export filtered flights (CSV)", view, "aerodata_flights.csv", "ops-csv")
     st.caption("Departure OTP uses valid scheduled and actual departure times; cancelled flights and missing actual departures are excluded. Unknown status is never treated as on time.")
 
+    st.title("Flight Monitoring")
+    st.caption("Inspect scheduled and actual flight operations for the current selection.")
+    # Synthetic data disclaimer
+    if "Synthetic" in data_source:
+        st.caption("Synthetic sample data — not for operational decisions.")
+    
+    # --- Search and filters ---
+    st.markdown("### Filters")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        search_query = st.text_input("Search flight number or airline")
+    with c2:
+        airport_options = sorted(set(flights.origin.dropna().astype(str)) | set(flights.destination.dropna().astype(str)))
+        selected_airport = st.selectbox("Origin airport", ["All airports", *airport_options])
+    with c3:
+        selected_destination = st.selectbox("Destination airport", ["All destinations"] + [d for d in airport_options if d != selected_airport])
+    
+    # Date range filter (already in session state)
+    if isinstance(date_range, tuple) and len(date_range) == 2:
+        date_mask = (flights.flight_date >= pd.Timestamp(date_range[0])) & (flights.flight_date <= pd.Timestamp(date_range[1]))
+    else:
+        date_mask = pd.Series(True, index=flights.index)
+    
+    # Airline filter
+    airline_options = sorted(flights.airline.dropna().unique()) if "airline" in flights.columns else []
+    selected_airline = st.multiselect("Airline", airline_options, default=airline_options)
+    
+    # Status filter
+    status_options = sorted(flights.status.dropna().unique()) if "status" in flights.columns else []
+    selected_status = st.multiselect("Flight status", status_options, default=status_options)
+    
+    # Delay threshold
+    delay_threshold = st.slider("Delay threshold (min)", 0, 120, DELAY_THRESHOLD_MIN)
+    
+    # Apply filters
+    mask = date_mask.copy()
+    if selected_airport != "All airports":
+        mask &= flights.origin.astype(str) == selected_airport
+    if selected_destination != "All destinations":
+        mask &= flights.destination.astype(str) == selected_destination
+    if selected_airline:
+        mask &= flights.airline.isin(selected_airline)
+    if selected_status:
+        mask &= flights.status.fillna("Unknown").isin(selected_status)
+    
+    filtered = flights[mask].copy()
+    
+    # Calculate delays
+    if "scheduled_departure" in filtered.columns and "actual_departure" in filtered.columns:
+        filtered["departure_delay_min"] = pd.to_numeric(filtered["actual_departure"], errors="coerce") - pd.to_numeric(filtered["scheduled_departure"], errors="coerce")
+    else:
+        filtered["departure_delay_min"] = pd.NA
+    
+    if "scheduled_arrival" in filtered.columns and "actual_arrival" in filtered.columns:
+        filtered["arrival_delay_min"] = pd.to_numeric(filtered["actual_arrival"], errors="coerce") - pd.to_numeric(filtered["scheduled_arrival"], errors="coerce")
+    else:
+        filtered["arrival_delay_min"] = pd.NA
+    
+    # KPI row
+    total = len(filtered)
+    delayed = int((filtered["departure_delay_min"] >= delay_threshold) | (filtered["arrival_delay_min"] >= delay_threshold)).sum() if "departure_delay_min" in filtered.columns and "arrival_delay_min" in filtered.columns else 0
+    on_time = int((filtered["departure_delay_min"] > -delay_threshold) & (filtered["departure_delay_min"] < delay_threshold) & (filtered["arrival_delay_min"] > -delay_threshold) & (filtered["arrival_delay_min"] < delay_threshold)).sum() if "departure_delay_min" in filtered.columns and "arrival_delay_min" in filtered.columns else 0
+    eligible = filtered["departure_delay_min"].notna().sum() if "departure_delay_min" in filtered.columns else 0
+    otp = int((filtered["departure_delay_min"] <= delay_threshold).sum()) if "departure_delay_min" in filtered.columns else 0
+    otp_rate = otp / eligible * 100 if eligible > 0 else np.nan
+    
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        st.metric("Flights analysed", f"{total:,}")
+    with k2:
+        st.metric("Delayed flights", f"{delayed:,}", f"Delay ≥ {delay_threshold} min")
+    with k3:
+        st.metric("On-time flights", f"{on_time:,}")
+    with k4:
+        if np.isnan(otp_rate):
+            st.metric("Departure OTP", "N/A")
+        else:
+            st.metric("Departure OTP", fmt_pct(otp_rate), f"{int(eligible):,} eligible flights")
+    
+    # Flight operations table
+    st.subheader("Flight operations table")
+    
+    table_cols = ["flight_id", "flight_date", "airline", "origin", "destination", "scheduled_departure", "actual_departure", "departure_delay_min", "scheduled_arrival", "actual_arrival", "arrival_delay_min", "status"]
+    table_cols = [col for col in table_cols if col in filtered.columns]
+    
+    # Format the table
+    display = filtered[table_cols].copy()
+    display.columns = [col.replace("_", " ").title() for col in display.columns]
+    
+    # Format delay columns
+    if "Departure Delay" in display.columns:
+        display["Departure Delay"] = display["Departure Delay"].apply(delay_label)
+    if "Arrival Delay" in display.columns:
+        display["Arrival Delay"] = display["Arrival Delay"].apply(delay_label)
+    
+    st.dataframe(display.sort_values("Scheduled Departure"), hide_index=True, use_container_width=True)
+    
+    # Flight details
+    if not filtered.empty:
+        st.subheader("Flight detail")
+        selected_flight = st.selectbox("Inspect a flight", filtered.flight_id.astype(str).tolist())
+        record = filtered[filtered.flight_id.astype(str).eq(selected_flight)].iloc[0]
+        with st.expander("Flight detail"):
+            details = {}
+            for key in record.index:
+                value = record[key]
+                if pd.isna(value):
+                    details[key] = "Not available"
+                elif isinstance(value, (pd.Timestamp, pd.Timedelta)):
+                    details[key] = str(value)
+                else:
+                    details[key] = value
+            st.json(details)
+    
+    # Status summary
+    st.subheader("Flight status summary")
+    status_counts = filtered.status.fillna("Unknown").value_counts()
+    chart_data = pd.DataFrame({"Status": status_counts.index, "Flights": status_counts.values})
+    chart(px.pie(chart_data, names="Status", values="Flights", hole=0.58))
+    
+    st.caption("Departure delay = actual departure minus scheduled departure. Arrival delay = actual arrival minus scheduled arrival. Positive values are late; negative values are early. Missing actual times are shown as Not available, not zero.")
 elif page == "Aircraft Turnaround":
     st.title("Aircraft Turnaround")
     st.caption("Explore scheduled and actual ground time between successive legs assigned to the same aircraft.")
