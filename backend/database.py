@@ -53,6 +53,10 @@ def save_processed(result: ProcessingResult, db_path: str | Path, source: str, s
         connection.execute("BEGIN")
         try:
             for key, frame in frames.items():
+                # Convert datetime columns to strings for SQLite compatibility
+                for col in frame.columns:
+                    if hasattr(frame[col].dtype, 'name') and 'datetime' in str(frame[col].dtype):
+                        frame[col] = frame[col].astype(str)
                 clean_frame = frame.astype(object).where(pd.notna(frame), None)
                 clean_frame.to_sql(TABLES[key], connection, if_exists="replace", index=False)
             connection.execute("DELETE FROM dataset_metadata")

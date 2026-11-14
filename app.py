@@ -23,7 +23,7 @@ BLUE = "#3E6E9E"
 BG = "#F5F7FA"
 BORDER = "#E2E8F0"
 TEXT = "#1F2937"
-PAGES = ["Overview", "Flight Operations", "Aircraft Turnaround", "Delay Propagation", "Weather Analysis", "Dataset Management", "Reports & Insights"]
+PAGES = ["Overview", "Flight Operations", "Aircraft Turnaround", "Delay Propagation", "Aircraft Rotation", "Weather Analysis", "Dataset Management", "Reports & Insights"]
 DELAY_THRESHOLD_MIN = 15
 
 st.set_page_config(page_title="AeroData | Airline Operations & Delay Analytics", page_icon="◫", layout="wide", initial_sidebar_state="expanded")
@@ -379,6 +379,136 @@ elif page == "Delay Propagation":
         csv_button("Export eligible connections (CSV)", eligible, "aerodata_connections.csv", "prop-csv")
         st.caption("The rate is potentially affected connections ÷ eligible connections. A matching aircraft ID and timing pattern do not prove the earlier flight caused the later delay.")
 
+
+
+elif page == "Aircraft Rotation":
+    st.title("Aircraft Rotation")
+    st.caption("Explore scheduled and actual ground time between successive legs assigned to the same aircraft.")
+
+    # Load flight data for rotation linking
+    from backend.database import load_processed
+    tables = load_processed("database/airline.db")
+    all_flights = tables.get("flights", pd.DataFrame())
+
+    # Build rotation links: successive flights on same aircraft
+    if not all_flights.empty:
+        # Ensure flight_date is datetime (data from load_processed already has proper types)
+        if "flight_date" in all_flights.columns:
+            all_flights["flight_date"] = pd.to_datetime(all_flights["flight_date"])
+
+        # Sort by aircraft and date for linking
+        all_flights = all_flights.sort_values(["aircraft_id", "flight_date"]).reset_index(drop=True)
+
+        # Create rotation links: each flight linked to the next one on same aircraft
+        links = []
+        for aircraft in all_flights.aircraft_id.dropna().unique():
+            aircraft_flights = all_flights[all_flights.aircraft_id == aircraft].copy()
+            if len(aircraft_flights) < 2:
+                continue
+
+            # Link each flight to the next one by flight_date
+            for i in range(len(aircraft_flights) - 1):
+                current = aircraft_flights.iloc[i]
+                next_flight = aircraft_flights.iloc[i + 1]
+
+                # Validate chronological order
+                if next_flight.flight_date > current.flight_date:
+                    link = {
+                        "aircraft_id": aircraft,
+                        "previous_flight_id": current.flight_id,
+                        "previous_scheduled_departure": current.scheduled_departure,
+                        "previous_scheduled_arrival": current.scheduled_arrival,
+                        "previous_actual_departure": current.actual_departure,
+                        "previous_actual_arrival": current.actual_arrival,
+                        "next_flight_id": next_flight.flight_id,
+                        "next_scheduled_departure": next_flight.scheduled_departure,
+                        "next_scheduled_arrival": next_flight.scheduled_arrival,
+                        "next_actual_departure": next_flight.actual_departure,
+                        "next_actual_arrival": next_flight.actual_arrival,
+                        "previous_arrival_delay_min": current.arrival_delay_min if "arrival_delay_min" in current else None,
+                        "next_departure_delay_min": next_flight.departure_delay_min if "departure_delay_min" in next_flight else None,
+                        "eligible": True
+                    }
+                    links.append(link)
+
+    rotations = pd.DataFrame(links) if links else pd.DataFrame()
+
+    # Aircraft selector
+    if not all_flights.empty:
+        aircraft_options = sorted(set(all_flights.aircraft_id.dropna().astype(str)))
+        chosen_aircraft = st.selectbox("Aircraft (tail number)", ["All aircraft", *aircraft_options])
+    else:
+        chosen_aircraft = "All aircraft"
+
+    if chosen_aircraft != "All aircraft":
+        all_flights = all_flights[all_flights.aircraft_id == chosen_aircraft]
+        if not rotations.empty:
+            rotations = rotations[rotations.aircraft_id == chosen_aircraft]
+
+    # Summary KPIs
+    if not all_flights.empty:
+        st.metric("Aircraft legs", f"{len(all_flights):,}")
+
+    # Rotation details
+    if not rotations.empty:
+        # Validate chronological order: previous arrival before next departure
+        valid = rotations.copy()
+        valid = valid[valid.previous_actual_arrival.notna() & valid.next_actual_departure.notna()].copy()
+
+        # Calculate ground time: next actual departure - previous actual arrival
+        valid["ground_time_min"] = (valid.next_actual_departure - valid.previous_actual_arrival).dt.total_seconds() / 60
+
+        # Flag negative or implausible ground times
+        valid["ground_time_flag"] = ""
+        negative = valid.ground_time_min.lt(0)
+        if negative.any():
+            valid.loc[negative, "ground_time_flag"] = "Negative ground time — data issue"
+        implausible = valid.ground_time_min.gt(1440)  # > 24 hours
+        if implausible.any():
+            valid.loc[implausible, "ground_time_flag"] = "Unusually long ground time"
+
+        # Configurable turnaround threshold (no universal standard)
+        tolerance = st.number_input("Turnaround tolerance above schedule (minutes)", min_value=0, max_value=240, value=15, step=5, help="A turnaround is on time if its actual ground time is no more than this many minutes longer than its scheduled ground time.")
+
+        # Validate: scheduled turnaround
+        valid["scheduled_turnaround_min"] = (valid.next_scheduled_departure - valid.previous_scheduled_arrival).dt.total_seconds() / 60
+        valid["scheduled_turnaround_valid"] = valid.scheduled_turnaround_min.notna() & valid.scheduled_turnaround_min.ge(0)
+
+        # On-time/normal/unavailable classification
+        on_time = valid.scheduled_turnaround_min.notna() & valid.actual_turnaround_min.notna() & (valid.actual_turnaround_min - valid.scheduled_turnaround_min).le(tolerance)
+        normal = valid.scheduled_turnaround_min.notna() & valid.actual_turnaround_min.notna() & (valid.actual_turnaround_min - valid.scheduled_turnaround_min).between(-tolerance, tolerance, inclusive="both")
+        unavailable = valid.actual_turnaround_min.isna() | valid.scheduled_turnaround_min.isna()
+
+        kpi_valid = valid[on_time | normal | unavailable]
+
+        if not kpi_valid.empty:
+            avg_turn = kpi_valid.actual_turnaround_min.mean()
+            st.metric("Average actual turnaround", f"{avg_turn:.1f} min", f"{len(kpi_valid):,} legs with data")
+            on_time_pct = on_time.mean() * 100 if len(on_time) else 0
+            st.metric("On-time turnaround", f"{on_time_pct:.1f}%", f"{int(on_time.sum()):,} of {len(on_time):,} · tolerance +{tolerance} min")
+            normal_pct = normal.mean() * 100 if len(normal) else 0
+            st.metric("Normal turnaround", f"{normal_pct:.1f}%", f"{int(normal.sum()):,} of {len(normal):,} · within ±{tolerance} min of schedule")
+            st.metric("Unavailable turnaround", f"{int(unavailable.sum()):,} · missing timestamps")
+
+        # Rotation timeline
+        st.subheader("Rotation timeline")
+        valid_for_display = valid.sort_values("previous_actual_arrival")
+        st.dataframe(valid_for_display[["aircraft_id", "previous_flight_id", "previous_scheduled_departure", "previous_actual_arrival", "next_flight_id", "next_scheduled_departure", "next_actual_departure", "previous_arrival_delay_min", "next_departure_delay_min", "ground_time_min", "ground_time_flag", "eligible"]], hide_index=True, use_container_width=True)
+
+        # Turnaround time distribution
+        st.subheader("Turnaround time distribution")
+        valid_hist = valid[valid.ground_time_min.notna()]
+        if not valid_hist.empty:
+            import plotly.express as px
+            fig = px.histogram(valid_hist, x="ground_time_min", nbins=20, labels={"ground_time_min": "Ground time (min)", "count": "Rotations"})
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Aircraft link validation notes
+        st.subheader("Aircraft link validation")
+        st.info("Link confidence depends on: matching aircraft ID, chronological continuity, and plausible timing. Unconfirmed links may represent different aircraft or data gaps.")
+    else:
+        st.info("No rotation records available for this aircraft or date range.")
+        st.info("Aircraft rotation tracks successive flight legs on the same aircraft. Ground time = next actual departure − previous actual arrival. Missing timestamps produce unavailable ground time; negative values flag data issues.")
 elif page == "Weather Analysis":
     st.title("Weather Analysis")
     st.caption("Review recorded weather conditions that overlap with flight delays; this page does not establish cause.")
